@@ -225,16 +225,14 @@ Definition OR (b1 b2: bexp) : bexp := NOT (AND (NOT b1) (NOT b2)).
 (** *** Exercise (1 star) *)
 (** Prove that the [OR] derived form has the expected semantics. *)
 
+Search (negb _ && negb _).
+Search negb.
 Lemma beval_OR:
   forall s b1 b2, beval (OR b1 b2) s = beval b1 s || beval b2 s.
 Proof.
-  intros; cbn.
-  (* Hint: use "SearchAbout negb" to see the available lemmas
-     that deal with Boolean negation. *)
-  (* Hint: or just do a case analysis on [beval b1 s] and [beval b2 s],
-     there are only 4 cases to consider. *)
-  (* FILL IN HERE *)
-Abort.
+  intros; cbn. rewrite <- negb_orb. rewrite negb_involutive.
+  reflexivity.
+Qed.
 
 (** ** 1.4 Commands *)
 
@@ -397,8 +395,17 @@ Lemma red_progress:
   forall c s, c = SKIP \/ exists c', exists s', red (c, s) (c', s').
 Proof.
   induction c; intros.
-  (* FILL IN HERE *)
-Abort.
+  - left. reflexivity.
+  - right. exists SKIP. exists (update x (aeval a s) s). apply red_assign.
+  - right. specialize (IHc1 s). destruct IHc1 as [H1 | H2].
+    + rewrite H1. rename c2 into c. exists c. exists s. apply red_seq_done.
+    + rename c2 into c. destruct H2 as (c2 & s' & H2). exists (SEQ c2 c).
+      exists s'. apply red_seq_step. exact H2.
+  - right. exists (if beval b s then c1 else c2). exists s. apply red_ifthenelse.
+  - destruct (beval b s) eqn:Beval. (* Always use the eqn tactic when destructing. This keeps Beval in context *)
+    + right. exists (SEQ c (WHILE b c)). exists s. apply red_while_loop. exact Beval.
+    + right. exists SKIP. exists s. apply red_while_done. exact Beval.  
+Qed.
 
 Lemma not_goes_wrong:
   forall c s, ~(goes_wrong s c).
