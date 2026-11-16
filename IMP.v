@@ -410,9 +410,38 @@ Qed.
 Lemma not_goes_wrong:
   forall c s, ~(goes_wrong s c).
 Proof.
-  intros c s (c' & s' & STAR & IRRED & NOTSKIP).
-  (* FILL IN HERE *)
-Abort.
+  intros c s. unfold goes_wrong. intros (c' & s' & STAR & IRRED & NOTSKIP).
+  unfold irred in IRRED.
+  induction c.
+  inversion STAR.
+  - rewrite H1 in NOTSKIP. unfold "<>" in NOTSKIP.
+    apply NOTSKIP. reflexivity.
+  - pose proof (red_progress) as HRP.
+    destruct HRP with (c:=c') (s:=s') as [HRP1 | HRP2].
+    + rewrite HRP1 in NOTSKIP. apply NOTSKIP. reflexivity.
+    + destruct HRP2 as (c0 & s0 & HRP2'). destruct IRRED with (b := (c0, s0)).
+      exact HRP2'.
+  - pose proof (red_progress) as HRP.
+    destruct HRP with (c:=c') (s:=s') as [HRP1 | HRP2].
+    + rewrite HRP1 in NOTSKIP. apply NOTSKIP. reflexivity.
+    + destruct HRP2 as (c0 & s0 & HRP2'). destruct IRRED with (b := (c0, s0)).
+      exact HRP2'.
+  - pose proof (red_progress) as HRP.
+    destruct HRP with (c:=c') (s:=s') as [HRP1 | HRP2].
+    + rewrite HRP1 in NOTSKIP. apply NOTSKIP. reflexivity.
+    + destruct HRP2 as (c0 & s0 & HRP2'). destruct IRRED with (b := (c0, s0)).
+      exact HRP2'.
+  - pose proof (red_progress) as HRP.
+    destruct HRP with (c:=c') (s:=s') as [HRP1 | HRP2].
+    + rewrite HRP1 in NOTSKIP. apply NOTSKIP. reflexivity.
+    + destruct HRP2 as (c0 & s0 & HRP2'). destruct IRRED with (b := (c0, s0)).
+      exact HRP2'.
+  - pose proof (red_progress) as HRP.
+    destruct HRP with (c:=c') (s:=s') as [HRP1 | HRP2].
+    + rewrite HRP1 in NOTSKIP. apply NOTSKIP. reflexivity.
+    + destruct HRP2 as (c0 & s0 & HRP2'). destruct IRRED with (b := (c0, s0)).
+      exact HRP2'.
+Qed.
 
 (** A technical lemma: a sequence of reductions can take place to the left
     of a [SEQ] constructor.  This generalizes rule [red_seq_step]. *)
@@ -596,8 +625,24 @@ Proof.
   induction fuel as [ | fuel ]; cbn; intros.
 - discriminate.
 - destruct c.
-  (* FILL IN HERE *)
-Abort.
+  + injection H. intros. rewrite <- H0. simpl. apply cexec_skip.
+  + injection H. intros. rewrite <- H0. apply cexec_assign.
+  + destruct (cexec_f fuel s c1) eqn:F1.
+    * apply cexec_seq with s0.
+      { apply IHfuel. exact F1. }
+      { apply IHfuel. exact H. }
+    * discriminate H.
+  + apply cexec_ifthenelse. apply IHfuel. exact H.
+  + destruct (beval b s) eqn:Beval.
+    * destruct (cexec_f fuel s c) eqn:F1.
+      { apply cexec_while_loop with (s := s) (s' := s0) (s'' := s').
+        { exact Beval. }
+        { apply IHfuel. exact F1. }
+        { apply IHfuel. exact H. } }
+      { discriminate H. }
+    * injection H; intros H0. rewrite <- H0. apply cexec_while_done.
+      exact Beval.
+Qed.
 
 Lemma cexec_f_complete:
   forall s c s', cexec s c s' ->
