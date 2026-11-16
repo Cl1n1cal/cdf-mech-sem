@@ -2,6 +2,7 @@ From Coq Require Import Arith ZArith Psatz Bool String List Program.Equality.
 From CDF Require Import Sequences Simulation.
 
 Local Open Scope string_scope.
+Local Open Scope nat_scope.
 Local Open Scope Z_scope.
 Local Open Scope list_scope.
 
@@ -644,14 +645,25 @@ Proof.
       exact Beval.
 Qed.
 
+Search (_ >=? _).
+Print ">=".
 Lemma cexec_f_complete:
   forall s c s', cexec s c s' ->
   exists fuel1, forall fuel, (fuel >= fuel1)%nat -> cexec_f fuel s c = Some s'.
 Proof.
   induction 1.
-  (* FILL IN HERE *)
-Abort.
-
+  - exists 1%nat. intros fuel H. unfold cexec_f. simpl. destruct fuel.
+   + inversion H.
+   + reflexivity.
+  - exists 1%nat. intros fuel H. unfold cexec_f. simpl. destruct fuel.
+   + inversion H.
+   + reflexivity.
+  - exists 2%nat. intros fuel H1. destruct fuel.
+   + inversion H1.
+   + inversion H.
+    * simpl. rewrite <- H3 in IHcexec1. rewrite -> H4 in IHcexec1.
+      destruct IHcexec1 as [f1 IH1]. destruct IH1 with (fuel := f1).
+      { }
 (** ** 1.8.  Transition semantics with continuations *)
 
 (** To help with the verification of a compiler (module [Compil]),
